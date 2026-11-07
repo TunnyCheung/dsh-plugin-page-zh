@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://github.com/Tunny1985/dsh-plugin-page-zh/dictionary.schema.json",
+  "$id": "https://github.com/TunnyCheung/dsh-plugin-page-zh/dictionary.schema.json",
   "title": "dsh-plugin-page-zh 词典",
   "description": "DSH 插件页 名称/简介 本地词典的 JSON Schema，供编辑器自动提示与校验。",
   "type": "object",

@@ -1,6 +1,6 @@
 {
   "meta": {
     "title": "插件页中文化（DSH 专用）",
-    "description": "把「设置 → 插件」页里每个插件的名称和简介显示为中文，人人一眼看懂各插件是干什么的。完全离线、零付费，不改任何插件包，也不影响插件升级。开源：https://github.com/Tunny1985/dsh-plugin-page-zh"
+    "description": "把「设置 → 插件」页里每个插件的名称和简介显示为中文，人人一眼看懂各插件是干什么的。完全离线、零付费，不改任何插件包，也不影响插件升级。开源：https://github.com/TunnyCheung/dsh-plugin-page-zh"
   }
 }

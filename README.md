@@ -3,11 +3,11 @@
 > **一句话**：把 the agent harness（DSH）**设置 → 插件** 页里每个插件的**名称和简介**显示成中文，人人一眼看懂每个插件是干什么的。
 > 完全离线、零网络、零付费；**不改任何插件包、不影响插件升级**；只在本地渲染时替换显示文本，重启即恢复原样。
 
-**仓库**：<https://github.com/Tunny1985/dsh-plugin-page-zh>　·　**发布版**：[v3.2.0](https://github.com/Tunny1985/dsh-plugin-page-zh/releases/tag/v3.2.0)　·　**许可**：MIT
+**仓库**：<https://github.com/TunnyCheung/dsh-plugin-page-zh>　·　**发布版**：[v3.2.0](https://github.com/TunnyCheung/dsh-plugin-page-zh/releases/tag/v3.2.0)　·　**许可**：MIT
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![tests](https://img.shields.io/badge/tests-32%20passed-brightgreen.svg)](test/e2e.cjs)
-[![CI](https://github.com/Tunny1985/dsh-plugin-page-zh/actions/workflows/ci.yml/badge.svg)](https://github.com/Tunny1985/dsh-plugin-page-zh/actions/workflows/ci.yml)
+[![CI](https://github.com/TunnyCheung/dsh-plugin-page-zh/actions/workflows/ci.yml/badge.svg)](https://github.com/TunnyCheung/dsh-plugin-page-zh/actions/workflows/ci.yml)
 
 ---
 
@@ -53,7 +53,7 @@ DSH（the agent harness）的「设置 → 插件」页会列出你装的每个�
 
 1. 克隆或下载本仓库到固定目录：
    ```bash
-   git clone https://github.com/Tunny1985/dsh-plugin-page-zh.git
+   git clone https://github.com/TunnyCheung/dsh-plugin-page-zh.git
    ```
    （或直接下载 ZIP 解压到例如 `D:\plugins\dsh-plugin-page-zh`）
 2. 在 DSH 里安装本地插件（Agent 工具 `plugin_manager install_bundle`）：
@@ -67,7 +67,7 @@ DSH（the agent harness）的「设置 → 插件」页会列出你装的每个�
 
 把这句话丢给你的 DSH 会话：
 
-> 帮我安装本地插件：`D:\plugins\dsh-plugin-page-zh`（仓库 https://github.com/Tunny1985/dsh-plugin-page-zh），装好后告诉我怎么刷新。
+> 帮我安装本地插件：`D:\plugins\dsh-plugin-page-zh`（仓库 https://github.com/TunnyCheung/dsh-plugin-page-zh），装好后告诉我怎么刷新。
 
 ---
 
@@ -205,10 +205,10 @@ A：插件纯前端 JS，与平台无关，跟随你的 DSH 桌面端运行。
 
 ## 相关链接
 
-- 仓库：<https://github.com/Tunny1985/dsh-plugin-page-zh>
-- 发布版：<https://github.com/Tunny1985/dsh-plugin-page-zh/releases>
-- 问题反馈：<https://github.com/Tunny1985/dsh-plugin-page-zh/issues>
+- 仓库：<https://github.com/TunnyCheung/dsh-plugin-page-zh>
+- 发布版：<https://github.com/TunnyCheung/dsh-plugin-page-zh/releases>
+- 问题反馈：<https://github.com/TunnyCheung/dsh-plugin-page-zh/issues>
 
 ## 许可证
 
-[MIT](LICENSE) © 2026 Tunny1985
+[MIT](LICENSE) © 2026 TunnyCheung

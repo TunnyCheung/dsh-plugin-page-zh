@@ -1,6 +1,6 @@
 # 贡献指南（Contributing）
 
-> 仓库：<https://github.com/Tunny1985/dsh-plugin-page-zh>　·　问题反馈：<https://github.com/Tunny1985/dsh-plugin-page-zh/issues>
+> 仓库：<https://github.com/TunnyCheung/dsh-plugin-page-zh>　·　问题反馈：<https://github.com/TunnyCheung/dsh-plugin-page-zh/issues>
 
 欢迎一起把这套本地汉化词典做得更好！最常见、最有价值的贡献就是**补充/修正翻译**。
 
