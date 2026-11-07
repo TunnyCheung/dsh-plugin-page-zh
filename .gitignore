@@ -9,3 +9,6 @@ node_modules/
 
 # 个人本地词典覆盖（如你不想提交自己的私有翻译）
 dictionary.local.json
+
+# 用户本地覆盖层（个人译名，默认不进仓库；示例见 overrides.json.example）
+overrides.json

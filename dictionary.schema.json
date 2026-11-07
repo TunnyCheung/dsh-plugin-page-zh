@@ -1,0 +1,45 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://github.com/Tunny1985/dsh-plugin-page-zh/dictionary.schema.json",
+  "title": "dsh-plugin-page-zh 词典",
+  "description": "DSH 插件页 名称/简介 本地词典的 JSON Schema，供编辑器自动提示与校验。",
+  "type": "object",
+  "additionalProperties": true,
+  "properties": {
+    "_comment": { "type": "string" },
+    "byName": {
+      "type": "object",
+      "additionalProperties": { "$ref": "#/definitions/entry" },
+      "propertyNames": {
+        "not": { "enum": ["__proto__", "constructor", "prototype"] }
+      }
+    },
+    "bySource": {
+      "type": "object",
+      "additionalProperties": { "type": "string" },
+      "propertyNames": {
+        "not": { "enum": ["__proto__", "constructor", "prototype"] }
+      }
+    }
+  },
+  "definitions": {
+    "entry": {
+      "type": "object",
+      "properties": {
+        "title": { "type": "string", "description": "中文名" },
+        "description": { "type": "string", "description": "中文简介（可选）" },
+        "aliases": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "该插件官方英文 title 的可能写法（可选）"
+        },
+        "style": {
+          "type": "string",
+          "enum": ["zh-only", "bilingual"],
+          "description": "标题显示形态：zh-only 只显示中文，bilingual 显示「英文原名 · 中文」（可选，缺省跟随全局 BILINGUAL）"
+        }
+      },
+      "additionalProperties": false
+    }
+  }
+}

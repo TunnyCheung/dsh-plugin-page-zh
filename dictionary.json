@@ -1,5 +1,6 @@
 {
-  "_comment": "DSH 插件页 名称/简介 本地词典。byName 按包名，bySource 按英文原文兜底；aliases 用于覆盖官方英文 title。",
+  "$schema": "./dictionary.schema.json",
+  "_comment": "DSH 插件页 名称/简介 本地词典。byName 按包名，bySource 按英文原文兜底；aliases 用于覆盖官方英文 title；style 可细化双语形态（zh-only / bilingual）。",
   "byName": {
     "@deepseek-ai/dsh-base": {
       "title": "DSH 基础（核心运行时）",

@@ -126,14 +126,31 @@ window.__ModuleLoader__.load({
     // BILINGUAL = true  → 标题显示「英文原名 · 中文意思」（如 dsh-jev-decision-model · Jev 决策评估模型）
     // BILINGUAL = false → 标题只显示中文意思
     // 简介始终只显示中文（较长，并列会影响阅读）。
+    // 注：此常量是「默认」；词典条目可用 style 字段单独覆盖（zh-only / bilingual），见 resolveString/makeTitle。
     const BILINGUAL = true;
 
-    // ---------- 2b. 工具 ----------
+    // ---------- 2b. 用户本地覆盖层 ----------
+    // OVERRIDES 由 build.cjs 从 overrides.json 注入（无覆盖文件时为空对象）。
+    // 优先级最高：命中即生效，不随 dictionary.json 升级被覆盖。
+    // 格式：{ "包名或英文原文": { title?, description?, style? } 或 "字符串中文名" }
+    const OVERRIDES = /* OVERRIDES-BEGIN */ {} /* OVERRIDES-END */;
+
+    // ---------- 2c. 工具 ----------
     const log = (...a) => { try { console.info('[i18n-local]', ...a); } catch (e) {} };
     const has = (obj, key) => obj != null && Object.prototype.hasOwnProperty.call(obj, key);
     // 判断字符串里是否含中文（用于判断“官方 zh 是否真的有中文”）
     const hasCJK = (s) => typeof s === 'string' && /[\u3400-\u9fff]/.test(s);
     const isPlainString = (v) => typeof v === 'string';
+
+    // 查用户覆盖层：key 命中返回 {title?, description?, style?}；未命中返回 undefined。
+    // 字符串形式视为「只给中文名」→ 默认 style=zh-only（用户写短字符串的意图就是整体替换成中文）。
+    function fromOverride(key) {
+      if (!has(OVERRIDES, key)) return undefined;
+      const v = OVERRIDES[key];
+      if (typeof v === 'string') return { title: v, style: 'zh-only' };
+      if (v && typeof v === 'object') return v;
+      return undefined;
+    }
 
     // 从本地词典解析：优先按包名（标题/简介字段），再按原文兜底
     function fromDict(kind, key, field) {
@@ -146,6 +163,57 @@ window.__ModuleLoader__.load({
       // 只在查询 description 时返回，避免把简介原文误当成标题命中。
       if (field === 'description' && has(DICT.bySource, key)) return DICT.bySource[key];
       return undefined;
+    }
+
+    // 取某包名的 style（zh-only / bilingual），用于按插件细化双语形态。
+    // 优先级：覆盖层 style > 词典 style > 全局 BILINGUAL。
+    function styleOf(name) {
+      const ov = fromOverride(name);
+      if (ov && ov.style) return ov.style;
+      if (has(DICT.byName, name) && has(DICT.byName[name], 'style')) return DICT.byName[name].style;
+      return BILINGUAL ? 'bilingual' : 'zh-only';
+    }
+
+    // 未覆盖诊断：对比「词典已收录」vs「实际加载的插件」，打印未翻译的包名。
+    // 数据来源（尽力而为）：window.__DSH_BOOT__ 可能的几种形态。
+    function diagnosticUncovered(ctx) {
+      let names = [];
+      const collect = (arr) => {
+        if (!Array.isArray(arr)) return;
+        for (const it of arr) {
+          if (typeof it === 'string') { names.push(it); continue; }
+          if (it && typeof it === 'object') {
+            const nm = it.name || it.id || it.package || it.pkg || it.module;
+            if (typeof nm === 'string') names.push(nm);
+          }
+        }
+      };
+      try {
+        const boot = (typeof window !== 'undefined' && window.__DSH_BOOT__) || null;
+        if (boot) {
+          collect(boot.plugins);
+          collect(boot.bundles);
+          collect(boot.services);
+          collect(boot.mods);
+          collect(boot.loaded);
+          if (boot.plugins && typeof boot.plugins === 'object' && !Array.isArray(boot.plugins)) {
+            for (const k in boot.plugins) names.push(k);
+          }
+        }
+      } catch (e) {}
+      // 去重 + 过滤掉已覆盖的
+      const uncovered = [];
+      const seen = new Set();
+      for (const n of names) {
+        if (typeof n !== 'string' || !n) continue;
+        if (seen.has(n)) continue;
+        seen.add(n);
+        const covered = has(DICT.byName, n) || has(OVERRIDES, n);
+        if (!covered) uncovered.push(n);
+      }
+      if (uncovered.length) {
+        log('⚠ 未覆盖的插件（可考虑补译）:', uncovered.join(', '));
+      }
     }
 
     // 预建「原文 → 中文」合并反查表：来源 = bySource + byName 各 entry 的 aliases（英文 title 别名）。
@@ -175,7 +243,7 @@ window.__ModuleLoader__.load({
 
     // ---------- 3. 主逻辑 ----------
     // 插件自身版本（与 package.json 同步，便于宿主日志排查；不含任何功能副作用）
-    const PLUGIN_VERSION = '3.1.0';
+    const PLUGIN_VERSION = '3.2.0';
 
     // 在 ctx 上按多种可能的名字寻找 locale 服务，兼容宿主日后改名/搬迁。
     // 找到即返回；找不到返回 undefined（不抛错）。
@@ -230,23 +298,31 @@ window.__ModuleLoader__.load({
         // 用于决定是否把原英文名保留在中文前面并列显示。
         const isEnglishy = (s) => typeof s === 'string' && !hasCJK(s) && /[A-Za-z]/.test(s);
 
-        // 构造标题：BILINGUAL=true 时输出「英文原名 · 中文意思」，否则只输出中文。
+        // 构造标题：style 决定并列形态。
+        //   zh-only   → 只显示中文意思
+        //   bilingual → 「英文原名 · 中文意思」
         // 若 text 本身已含中文（不是英文名），则不重复并列。
-        function makeTitle(origText, zh) {
-          if (zh === undefined) return text_undefined(origText);
-          if (!BILINGUAL) return zh;
+        function makeTitle(origText, zh, style) {
+          if (zh === undefined) return origText;
+          const s = style || 'bilingual';
+          if (s === 'zh-only') return zh;
           if (!isEnglishy(origText)) return zh;         // 原文已是中文/非英文 → 不并列
           if (origText === zh) return zh;                // 译文与原文相同 → 不并列
           return origText + ' · ' + zh;                  // 英文原名 · 中文意思
         }
-        function text_undefined(v) { return v; }
 
         // 处理纯字符串：可能是包名(标题) 或 英文原文(简介)
         function resolveString(text) {
-          // 先按标题命中（包名 → title，英文标题 → title），走「英文 · 中文」并列
+          // 0) 用户覆盖层最高优先级：按包名/原文命中，可带 title/description/style
+          const ov = fromOverride(text);
+          if (ov) {
+            if (ov.title !== undefined) return makeTitle(text, ov.title, ov.style);
+            if (ov.description !== undefined) return ov.description;
+          }
+          // 1) 先按标题命中（包名 → title，英文标题 → title），走「英文 · 中文」并列
           const zhTitle = fromDict('name', text, 'title') || fromDict('source', text, 'title');
-          if (zhTitle !== undefined) return makeTitle(text, zhTitle);
-          // 再按简介命中（英文原文 → description），简介只显示中文（简介较长，并列会影响阅读）
+          if (zhTitle !== undefined) return makeTitle(text, zhTitle, styleOf(text));
+          // 2) 再按简介命中（英文原文 → description），简介只显示中文（简介较长，并列会影响阅读）
           const zhDesc = fromDict('source', text, 'description');
           if (zhDesc !== undefined) return zhDesc;
           // 也允许包名命中 description（少见）
@@ -267,6 +343,12 @@ window.__ModuleLoader__.load({
           // 官方没有中文（或 zh 就是英文）→ 用本地词典按 en 原文反查
           const enVal = obj.en;
           if (isPlainString(enVal)) {
+            // 0) 用户覆盖层最高优先级（按 en 原文命中）
+            const ov = fromOverride(enVal);
+            if (ov) {
+              if (ov.title !== undefined) return makeTitle(enVal, ov.title, ov.style);
+              if (ov.description !== undefined) return ov.description;
+            }
             // 1) 合并反查表（bySource + 含中文的 byName 值）
             if (has(CACHE, enVal)) return CACHE[enVal];
             // 2) 再走一次常规 resolveString（覆盖 bySource/byName 各种字段）
@@ -310,7 +392,16 @@ window.__ModuleLoader__.load({
           const probe = ['@deepseek-ai/dsh-base', 'dsh-purge', 'dsh-better-sidebar']
             .map((k) => `${k} => ${locale.resolveText(k)}`);
           log('v' + PLUGIN_VERSION + ' resolveText patched OK;', probe.join(' | '));
-          log('dict names:', Object.keys(DICT.byName).length, '| sources:', Object.keys(DICT.bySource).length);
+          log('dict names:', Object.keys(DICT.byName).length, '| sources:', Object.keys(DICT.bySource).length
+            + '| overrides:', Object.keys(OVERRIDES).length);
+        } catch (e) {}
+
+        // 未覆盖诊断：尽力找出「已加载但词典/覆盖层都没收录」的插件名，打日志提示用户可补译。
+        // 数据来源（尽力而为，取不到就静默跳过，绝不干扰插件页）：
+        //   1) window.__DSH_BOOT__（DSH 前端注入的 boot 上下文）里的插件/服务清单
+        //   2) 兜底：无任何数据源时不输出。
+        try {
+          diagnosticUncovered(ctx);
         } catch (e) {}
     }
   }

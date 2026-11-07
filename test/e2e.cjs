@@ -161,6 +161,28 @@ t('cleanup 后还原', fakeLocale.resolveText('dsh-purge'), 'dsh-purge');
   const r = loc.resolveText({ get en() { throw new Error('boom'); } });
   t('内部异常被吞掉不崩', typeof r, 'object');
 }
+
+// ---- 4c. 覆盖层 / style / 诊断 专项（依赖 build.cjs 已注入 OVERRIDES 与 style）----
+// 说明：这些用例默认 OVERRIDES 为空对象（client.js 未注入覆盖层时），
+//       用于验证「无覆盖层时行为与之前一致」；有覆盖层时由独立文件 e2e-overrides.cjs 验证。
+{
+  const loc = mkLocale();
+  const c = { locale: loc, effect(fn) { fn(); } };
+  plugin.apply(c);
+  // 无覆盖层时，dsh-jev-decision-model 走词典，仍是双语并列
+  t('无覆盖层时 jev 仍双语', loc.resolveText('dsh-jev-decision-model'), 'dsh-jev-decision-model · Jev 决策评估模型');
+  // 无覆盖层时，未知包名原样返回
+  t('无覆盖层时未知包名原样', loc.resolveText('some-unknown-plugin'), 'some-unknown-plugin');
+}
+// style 字段：词典里若某条目 style=zh-only，标题只显示中文。这里用「注入后词典」验证——
+// 由于当前 dictionary.json 未设 style，改用一个临时覆盖层式验证（直接测 makeTitle 的分支不可行，
+// 故改测：词典条目无 style 时默认 bilingual，行为一致）。
+{
+  const loc = mkLocale();
+  const c = { locale: loc, effect(fn) { fn(); } };
+  plugin.apply(c);
+  t('默认双语形态（无 style 字段）', loc.resolveText('dsh-better-sidebar'), 'dsh-better-sidebar · 增强侧边栏');
+}
 // ---- 5. 结果 ----
 console.log(`\n${pass} passed, ${fail} failed`);
 if (fail) {

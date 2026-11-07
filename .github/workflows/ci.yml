@@ -24,6 +24,7 @@ jobs:
           node --check index.js
           node --check build.cjs
           node --check test/e2e.cjs
+          node --check test/e2e-overrides.cjs
       - name: 确认 client.js 的 DICT 段与 dictionary.json 一致
         run: |
           cp client.js /tmp/client.before.js
@@ -33,4 +34,6 @@ jobs:
             exit 1
           fi
       - name: 离线端到端测试
-        run: node test/e2e.cjs
+        run: |
+          node test/e2e.cjs
+          node test/e2e-overrides.cjs

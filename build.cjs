@@ -19,13 +19,80 @@ const path = require('path');
 const ROOT = __dirname;
 const DICT_FILE = path.join(ROOT, 'dictionary.json');
 const CLIENT_FILE = path.join(ROOT, 'client.js');
+const OVERRIDES_FILE = path.join(ROOT, 'overrides.json');
 
 const BEGIN = '    // ===== DICT-BEGIN (generated from dictionary.json, do not edit by hand) =====';
 const END = '    // ===== DICT-END =====';
+// OVERRIDES 的值用内联注释标记包裹，仅替换 {} 字面量，const 声明始终保留在 client.js 里
+const OVERRIDES_BEGIN = '/* OVERRIDES-BEGIN */';
+const OVERRIDES_END = '/* OVERRIDES-END */';
 
 function die(msg) {
   console.error('[build] ERROR:', msg);
   process.exit(1);
+}
+
+// 一键增词：node build.cjs --add <包名> <中文名> [中文简介] [--style=zh-only|bilingual]
+// 自动补格式、写回 dictionary.json、跑校验，并重新注入 client.js。
+function addEntry() {
+  const idx = process.argv.indexOf('--add');
+  const args = process.argv.slice(idx + 1);
+  const name = args[0];
+  const title = args[1];
+  if (!name || !title) {
+    die('用法: node build.cjs --add <包名> <中文名> [中文简介] [--style=zh-only|bilingual]');
+  }
+  const desc = args[2] && !args[2].startsWith('--') ? args[2] : undefined;
+  const styleArg = args.find((a) => a.startsWith('--style='));
+  const style = styleArg ? styleArg.slice('--style='.length) : undefined;
+  if (style && style !== 'zh-only' && style !== 'bilingual') {
+    die('--style 只能是 zh-only 或 bilingual');
+  }
+
+  let dict;
+  try {
+    dict = JSON.parse(fs.readFileSync(DICT_FILE, 'utf8'));
+  } catch (e) {
+    die('dictionary.json 读不到或非法: ' + e.message);
+  }
+  dict.byName = dict.byName || {};
+  const entry = { title };
+  if (desc) entry.description = desc;
+  if (style) entry.style = style;
+  dict.byName[name] = entry;
+
+  fs.writeFileSync(DICT_FILE, JSON.stringify(dict, null, 2) + '\n', 'utf8');
+  console.log('[build] 已新增 byName["' + name + '"] = ' + JSON.stringify(entry));
+  validate(dict);
+  // 继续走正常注入流程（复用 main 的剩余逻辑）：直接递归调用一次普通构建
+  process.argv = process.argv.filter((a) => a !== '--add' && a !== name && a !== title && a !== desc && a !== styleArg);
+  main();
+  process.exit(0);
+}
+
+// 读取用户本地覆盖层 overrides.json（可选）。格式：{ "包名或英文原文": { title?, description?, style? } 或 字符串 }
+// 不存在/非法时返回 {}，绝不因此中断构建。
+function readOverrides() {
+  let raw;
+  try {
+    raw = fs.readFileSync(OVERRIDES_FILE, 'utf8');
+  } catch (e) {
+    return {}; // 无覆盖文件，正常
+  }
+  try {
+    const o = JSON.parse(raw);
+    if (!o || typeof o !== 'object' || Array.isArray(o)) return {};
+    // 过滤非法键，但不清空合法项
+    const out = {};
+    for (const k of Object.keys(o)) {
+      if (['__proto__', 'constructor', 'prototype'].includes(k)) continue;
+      out[k] = o[k];
+    }
+    return out;
+  } catch (e) {
+    console.warn('[build] overrides.json 不是合法 JSON，已忽略覆盖层:', e.message);
+    return {};
+  }
 }
 
 function validate(dict) {
@@ -49,6 +116,11 @@ function validate(dict) {
         die('byName["' + name + '"].aliases 必须是字符串数组');
       }
     }
+    if (e.style !== undefined) {
+      if (e.style !== 'zh-only' && e.style !== 'bilingual') {
+        die('byName["' + name + '"].style 只能是 "zh-only" 或 "bilingual"');
+      }
+    }
   }
   for (const [k, v] of Object.entries(bySource)) {
     if (typeof v !== 'string') die('bySource 值必须是字符串 (key=' + k.slice(0, 40) + '...)');
@@ -58,6 +130,11 @@ function validate(dict) {
 }
 
 function main() {
+  // ---- 一键增词：node build.cjs --add <包名> <中文名> [中文简介] [--style=zh-only|bilingual] ----
+  if (process.argv.includes('--add')) {
+    return addEntry();
+  }
+
   let raw;
   try {
     raw = fs.readFileSync(DICT_FILE, 'utf8');
@@ -72,8 +149,12 @@ function main() {
   }
   const count = validate(dict);
 
+  // 读取用户本地覆盖层（可选文件，不存在则用空对象，绝不报错）
+  const overrides = readOverrides();
+
   if (process.argv.includes('--check')) {
-    console.log('[build] dictionary.json OK (' + count + ' 条译文)');
+    console.log('[build] dictionary.json OK (' + count + ' 条译文)'
+      + (Object.keys(overrides).length ? ' + overrides.json (' + Object.keys(overrides).length + ' 条)' : ''));
     return;
   }
 
@@ -83,6 +164,9 @@ function main() {
     .map((line, i) => (i === 0 ? line : '    ' + line))
     .join('\n');
   const block = BEGIN + '\n    const DICT = ' + indented + ';\n' + END;
+
+  // 注入用户覆盖层（若存在），替换 OVERRIDES 内联标记之间的 {} 字面量
+  const overridesLiteral = JSON.stringify(overrides, null, 2);
 
   let client;
   try {
@@ -97,9 +181,19 @@ function main() {
     die('client.js 里找不到 DICT-BEGIN/DICT-END 标记块，请检查标记是否被人为删除');
   }
   const before = client.slice(0, beginIdx);
-  const after = client.slice(endIdx + END.length);
+  let after = client.slice(endIdx + END.length);
+
+  // 替换 OVERRIDES 内联标记之间的字面量（const 声明始终保留）
+  const obBegin = after.indexOf(OVERRIDES_BEGIN);
+  const obEnd = after.indexOf(OVERRIDES_END);
+  if (obBegin === -1 || obEnd === -1 || obEnd < obBegin) {
+    die('client.js 里找不到 OVERRIDES 内联标记 /* OVERRIDES-BEGIN */ ... /* OVERRIDES-END */');
+  }
+  after = after.slice(0, obBegin + OVERRIDES_BEGIN.length) + ' ' + overridesLiteral + ' ' + after.slice(obEnd);
+
   fs.writeFileSync(CLIENT_FILE, before + block + after, 'utf8');
-  console.log('[build] 已把 dictionary.json (' + count + ' 条译文) 注入 client.js');
+  console.log('[build] 已把 dictionary.json (' + count + ' 条译文) 注入 client.js'
+    + (Object.keys(overrides).length ? '，并注入 overrides.json (' + Object.keys(overrides).length + ' 条覆盖)' : ''));
 }
 
 main();

@@ -1,0 +1,13 @@
+{
+  "_comment": "用户本地覆盖层示例：复制本文件为 overrides.json 即可生效（overrides.json 已被 .gitignore 排除，不会进仓库）。key 可以是「包名」或「英文原文」，value 可以是「字符串中文名」或「对象 {title?, description?, style?}」。优先级最高，不随 dictionary.json 升级被覆盖。",
+  "dsh-jev-decision-model": {
+    "title": "Jev 决策评估模型（我的叫法）",
+    "style": "bilingual"
+  },
+  "some-other-plugin": "我的自定义译名",
+  "Another Plugin English Title": {
+    "title": "另一个插件",
+    "description": "这是我自己写的中文简介，会盖过官方和词典。",
+    "style": "zh-only"
+  }
+}

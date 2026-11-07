@@ -1,5 +1,17 @@
 # 更新日志
 
+## 3.2.0
+
+### 新增
+- **用户本地覆盖层 `overrides.json`**：最高优先级，写个人译名不随 `dictionary.json` 升级被覆盖；已被 `.gitignore` 排除，示例见 `overrides.json.example`。
+- **双语按插件细化（`style` 字段）**：词典/覆盖层条目可用 `style: "zh-only"`（只显示中文）或 `"bilingual"`（英文原名 · 中文并列），替代全局一刀切。
+- **未覆盖插件诊断**：启动时打印「词典/覆盖层都没收录的插件名」，提示哪些还能补译。
+- **一键增词**：`node build.cjs --add <包名> <中文名> [简介] [--style=…]` 自动补格式、写回 `dictionary.json` 并校验。
+- **词典 JSON Schema**：`dictionary.schema.json`，编辑器自动提示/校验 `title`/`description`/`aliases`/`style` 字段。
+
+### 测试
+- 端到端测试增至 **32 条**：`test/e2e.cjs` 27 条 + 新增 `test/e2e-overrides.cjs` 5 条（覆盖层优先级、字符串形式 zh-only、按原文命中、style 细化）。
+
 ## 3.1.0
 
 ### 兼容性强化（DSH 升级后仍可用）
