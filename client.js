@@ -122,7 +122,13 @@ window.__ModuleLoader__.load({
     };
     // ===== DICT-END =====
 
-    // ---------- 2. 工具 ----------
+    // ---------- 2. 配置 ----------
+    // BILINGUAL = true  → 标题显示「英文原名 · 中文意思」（如 dsh-jev-decision-model · Jev 决策评估模型）
+    // BILINGUAL = false → 标题只显示中文意思
+    // 简介始终只显示中文（较长，并列会影响阅读）。
+    const BILINGUAL = true;
+
+    // ---------- 2b. 工具 ----------
     const log = (...a) => { try { console.info('[i18n-local]', ...a); } catch (e) {} };
     const has = (obj, key) => obj != null && Object.prototype.hasOwnProperty.call(obj, key);
     // 判断字符串里是否含中文（用于判断“官方 zh 是否真的有中文”）
@@ -136,7 +142,9 @@ window.__ModuleLoader__.load({
         const entry = DICT.byName[key];
         if (has(entry, field)) return entry[field];
       }
-      if (has(DICT.bySource, key)) return DICT.bySource[key];
+      // bySource 是「英文原文 → 中文」，一律视为简介（description）译文，
+      // 只在查询 description 时返回，避免把简介原文误当成标题命中。
+      if (field === 'description' && has(DICT.bySource, key)) return DICT.bySource[key];
       return undefined;
     }
 
@@ -177,12 +185,29 @@ window.__ModuleLoader__.load({
 
         const original = locale.resolveText;
 
+        // 判断字符串是否“像一个英文包名/标题”（只含 ASCII 可见字符、无中文）
+        // 用于决定是否把原英文名保留在中文前面并列显示。
+        const isEnglishy = (s) => typeof s === 'string' && !hasCJK(s) && /[A-Za-z]/.test(s);
+
+        // 构造标题：BILINGUAL=true 时输出「英文原名 · 中文意思」，否则只输出中文。
+        // 若 text 本身已含中文（不是英文名），则不重复并列。
+        function makeTitle(origText, zh) {
+          if (zh === undefined) return text_undefined(origText);
+          if (!BILINGUAL) return zh;
+          if (!isEnglishy(origText)) return zh;         // 原文已是中文/非英文 → 不并列
+          if (origText === zh) return zh;                // 译文与原文相同 → 不并列
+          return origText + ' · ' + zh;                  // 英文原名 · 中文意思
+        }
+        function text_undefined(v) { return v; }
+
         // 处理纯字符串：可能是包名(标题) 或 英文原文(简介)
         function resolveString(text) {
-          const zh = fromDict('name', text, 'title') || fromDict('source', text, 'title');
-          if (zh !== undefined) return zh;
-          const dz = fromDict('source', text, 'description');
-          if (dz !== undefined) return dz;
+          // 先按标题命中（包名 → title，英文标题 → title），走「英文 · 中文」并列
+          const zhTitle = fromDict('name', text, 'title') || fromDict('source', text, 'title');
+          if (zhTitle !== undefined) return makeTitle(text, zhTitle);
+          // 再按简介命中（英文原文 → description），简介只显示中文（简介较长，并列会影响阅读）
+          const zhDesc = fromDict('source', text, 'description');
+          if (zhDesc !== undefined) return zhDesc;
           // 也允许包名命中 description（少见）
           const dn = fromDict('name', text, 'description');
           if (dn !== undefined) return dn;

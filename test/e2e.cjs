@@ -69,12 +69,14 @@ function t(name, got, want) {
 const contains = (kw) => (s) => typeof s === 'string' && s.indexOf(kw) >= 0;
 
 // ---- 3. 用例 ----
-// 纯字符串（包名 → 中文标题）
-t('包名 dsh-purge', R('dsh-purge'), '提示词权威性清洗');
-t('包名 @deepseek-ai/dsh-base', R('@deepseek-ai/dsh-base'), 'DSH 基础（核心运行时）');
-t('包名 dsh-memory-evolve', R('dsh-memory-evolve'), '记忆与待办演进');
-// 纯字符串（英文原文简介 → 中文简介）
-t('原文 superpowers', R('Superpowers for the DeepSeek Harness: TDD, debugging, planning, and collaboration skills adapted from obra/superpowers'), contains('超能力'));
+// 纯字符串（包名 → 「英文原名 · 中文」并列标题）
+t('包名 dsh-purge 并列', R('dsh-purge'), 'dsh-purge · 提示词权威性清洗');
+t('包名 @deepseek-ai/dsh-base 并列', R('@deepseek-ai/dsh-base'), '@deepseek-ai/dsh-base · DSH 基础（核心运行时）');
+t('包名 dsh-jev-decision-model 并列', R('dsh-jev-decision-model'), 'dsh-jev-decision-model · Jev 决策评估模型');
+t('包名 dsh-memory-evolve 含中文', R('dsh-memory-evolve'), contains('记忆与待办演进'));
+// 纯字符串（英文原文简介 → 中文简介，简介只显示中文不并列）
+t('原文 superpowers 简介', R('Superpowers for the DeepSeek Harness: TDD, debugging, planning, and collaboration skills adapted from obra/superpowers'), contains('超能力'));
+t('原文 jev 简介只中文', R('Jev Decision Engine for Agent Harnesses: native DeepSeek Harness, plus OpenCode and Codex Harness through iPolloWork'), (s) => typeof s === 'string' && s.indexOf('Jev Decision Engine') < 0 && s.indexOf('Jev 决策引擎') >= 0);
 // 语言对象：官方有中文 → 尊重官方
 t('对象 官方中文 config-manager', R({ en: 'Config Manager', zh: '配置管理器' }), '配置管理器');
 t('对象 官方中文任意', R({ en: 'X', zh: '官方中文标题' }), '官方中文标题');
@@ -93,7 +95,6 @@ t('数字原样', R(123), 123);
 // ---- 4. 可逆性 ----
 effects.forEach((f) => f && f());
 t('cleanup 后还原', fakeLocale.resolveText('dsh-purge'), 'dsh-purge');
-
 // ---- 5. 结果 ----
 console.log(`\n${pass} passed, ${fail} failed`);
 if (fail) {

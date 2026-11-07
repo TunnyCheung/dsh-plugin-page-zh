@@ -1,9 +1,9 @@
 {
   "name": "dsh-plugin-page-zh",
-  "version": "2.0.0",
+  "version": "3.0.0",
   "private": true,
   "type": "module",
-  "description": "DSH（the agent harness）插件页中文汉化：把「设置 → 插件」里每个插件的名称和简介在本地显示为中文。完全离线、零网络、零付费；不改任何插件包、不影响插件升级、只在本地渲染时替换显示文本。",
+  "description": "DSH（the agent harness）插件页中文汉化：把「设置 → 插件」里每个插件的名称和简介在本地显示为中文，标题采用「原英文名 · 中文意思」并列形态。完全离线、零网络、零付费；不改任何插件包、不影响插件升级、只在本地渲染时替换显示文本。",
   "keywords": [
     "dsh",
     "deepseek-harness",
