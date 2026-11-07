@@ -1,0 +1,55 @@
+{
+  "name": "dsh-plugin-i18n-local",
+  "version": "2.0.0",
+  "private": true,
+  "type": "module",
+  "description": "DSH Plugins page 中文汉化：本地词典 + 官方 locale 优先，把插件名称/简介在渲染时显示为中文。完全离线、零网络、不改插件包、不影响升级。",
+  "keywords": [
+    "dsh",
+    "deepseek-harness",
+    "plugin",
+    "i18n",
+    "zh-cn",
+    "localization",
+    "translation"
+  ],
+  "license": "MIT",
+  "author": "dsh-plugin-i18n-local contributors",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/your-name/dsh-plugin-i18n-local.git"
+  },
+  "scripts": {
+    "build": "node build.cjs",
+    "check": "node build.cjs --check && node --check client.js",
+    "test": "node test/e2e.cjs"
+  },
+  "files": [
+    "index.js",
+    "client.js",
+    "dictionary.json",
+    "cordis.patch.yml",
+    "locale/*.json",
+    "icon.svg",
+    "README.md",
+    "LICENSE"
+  ],
+  "exports": {
+    ".": "./index.js",
+    "./client": "./client.js",
+    "./locale/*.json": "./locale/*.json",
+    "./icon": "./icon.svg"
+  },
+  "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    },
+    "client": {
+      "platform": "web",
+      "immediately": true,
+      "inject": [
+        "@deepseek-ai/dsh-client-ui-conversation"
+      ]
+    }
+  }
+}

@@ -1,0 +1,36 @@
+name: CI
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        node-version: [18, 20, 22]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+      - name: 校验 dictionary.json 结构
+        run: node build.cjs --check
+      - name: 语法检查
+        run: |
+          node --check client.js
+          node --check index.js
+          node --check build.cjs
+          node --check test/e2e.cjs
+      - name: 确认 client.js 的 DICT 段与 dictionary.json 一致
+        run: |
+          cp client.js /tmp/client.before.js
+          node build.cjs
+          if ! diff -q client.js /tmp/client.before.js; then
+            echo "::error::client.js 的 DICT 段与 dictionary.json 不一致，请运行 node build.cjs 后提交"
+            exit 1
+          fi
+      - name: 离线端到端测试
+        run: node test/e2e.cjs
