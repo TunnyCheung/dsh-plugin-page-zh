@@ -1,6 +1,6 @@
-# dsh-plugin-i18n-local · DSH 插件页中文汉化
+# dsh-plugin-page-zh · the agent harness 插件页中文化（DSH 专用）
 
-> 把 DeepSeek Harness（DSH）**设置 → 插件** 页里每个插件的**名称和简介**显示成中文。
+> **一句话**：把 the agent harness（DSH）**设置 → 插件** 页里每个插件的**名称和简介**显示成中文，人人一眼看懂每个插件是干什么的。
 > 完全离线、零网络、零付费；**不改任何插件包、不影响插件升级**；只在本地渲染时替换显示文本，重启即恢复原样。
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
@@ -27,7 +27,7 @@ DSH 的插件页会列出你装的每个插件，但很多第三方插件的**�
 
 ### 方式 A：从本地目录安装（推荐，最简单）
 
-1. 把这个仓库放到一个固定目录（例如 `D:\plugins\dsh-plugin-i18n-local`）。
+1. 把这个仓库放到一个固定目录（例如 `D:\plugins\dsh-plugin-page-zh`）。
 2. 在 DSH 里打开一个能执行命令的会话，让 Agent 帮你安装（或你自己用 DSH 的插件安装能力）：
    ```
    插件管理 → 安装本地 bundle → 选择这个目录
@@ -39,7 +39,7 @@ DSH 的插件页会列出你装的每个插件，但很多第三方插件的**�
 
 把这句话丢给你的 DSH 会话即可：
 
-> 帮我安装本地插件：`D:\plugins\dsh-plugin-i18n-local`，装好后告诉我怎么刷新。
+> 帮我安装本地插件：`D:\plugins\dsh-plugin-page-zh`，装好后告诉我怎么刷新。
 
 ---
 
@@ -78,7 +78,7 @@ DSH 插件页渲染每张卡片的标题/简介时，都会调用前端的 `ctx.
 ## 目录结构
 
 ```
-dsh-plugin-i18n-local/
+dsh-plugin-page-zh/
 ├─ package.json          # 插件清单（dsh.bundle.patch + dsh.client）
 ├─ cordis.patch.yml      # 把本 bundle 注册进 DSH loader
 ├─ index.js              # Host 半：空实现（翻译全在前端）

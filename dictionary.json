@@ -80,7 +80,7 @@
     "@deepseek-ai/dsh-experimental-plugin-market-bundle": {
       "title": "插件市场（实验）"
     },
-    "dsh-plugin-i18n-local": {
+    "dsh-plugin-page-zh": {
       "title": "插件名称与简介本地翻译"
     }
   },

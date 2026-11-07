@@ -1,9 +1,9 @@
 {
-  "name": "dsh-plugin-i18n-local",
+  "name": "dsh-plugin-page-zh",
   "version": "2.0.0",
   "private": true,
   "type": "module",
-  "description": "DSH Plugins page 中文汉化：本地词典 + 官方 locale 优先，把插件名称/简介在渲染时显示为中文。完全离线、零网络、不改插件包、不影响升级。",
+  "description": "DSH（the agent harness）插件页中文汉化：把「设置 → 插件」里每个插件的名称和简介在本地显示为中文。完全离线、零网络、零付费；不改任何插件包、不影响插件升级、只在本地渲染时替换显示文本。",
   "keywords": [
     "dsh",
     "deepseek-harness",
@@ -14,10 +14,10 @@
     "translation"
   ],
   "license": "MIT",
-  "author": "dsh-plugin-i18n-local contributors",
+  "author": "dsh-plugin-page-zh contributors",
   "repository": {
     "type": "git",
-    "url": "https://github.com/your-name/dsh-plugin-i18n-local.git"
+    "url": "https://github.com/your-name/dsh-plugin-page-zh.git"
   },
   "scripts": {
     "build": "node build.cjs",

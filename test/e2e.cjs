@@ -15,7 +15,7 @@ const fs = require('fs');
 const path = require('path');
 
 const CLIENT = path.join(__dirname, '..', 'client.js');
-const PLUGIN_ID = 'dsh-plugin-i18n-local';
+const PLUGIN_ID = 'dsh-plugin-page-zh';
 
 // ---- 1. 模拟运行环境 ----
 const registered = {};

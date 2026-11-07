@@ -1,6 +1,6 @@
 {
   "meta": {
-    "title": "插件名称与简介本地翻译",
-    "description": "在本地把「插件」页里每个插件的名称和简介显示为中文，不改动任何插件包，也不影响插件升级；仅在本地渲染时替换显示文本。"
+    "title": "Plugins Page Chinese (DSH)",
+    "description": "Show every plugin's name and description on the Settings → Plugins page in Chinese, so anyone can tell what each plugin does at a glance. Fully offline, free, edits no plugin package, and never affects plugin upgrades."
   }
 }

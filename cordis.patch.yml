@@ -1,4 +1,4 @@
 - insert:
-    - id: dsh-plugin-i18n-local
-      name: 'dsh-plugin-i18n-local'
+    - id: dsh-plugin-page-zh
+      name: 'dsh-plugin-page-zh'
       config: {}

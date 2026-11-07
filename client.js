@@ -1,5 +1,5 @@
 window.__ModuleLoader__.load({
-  id: 'dsh-plugin-i18n-local',
+  id: 'dsh-plugin-page-zh',
   factory(require) {
     // =====================================================================
     // DSH 插件页 名称/简介 本地翻译 v2
@@ -100,7 +100,7 @@ window.__ModuleLoader__.load({
         "@deepseek-ai/dsh-experimental-plugin-market-bundle": {
           "title": "插件市场（实验）"
         },
-        "dsh-plugin-i18n-local": {
+        "dsh-plugin-page-zh": {
           "title": "插件名称与简介本地翻译"
         }
       },
