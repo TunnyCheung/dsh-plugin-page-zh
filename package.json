@@ -17,7 +17,7 @@
   "author": "dsh-plugin-page-zh contributors",
   "repository": {
     "type": "git",
-    "url": "https://github.com/your-name/dsh-plugin-page-zh.git"
+    "url": "https://github.com/Tunny1985/dsh-plugin-page-zh.git"
   },
   "scripts": {
     "build": "node build.cjs",
@@ -51,5 +51,9 @@
         "@deepseek-ai/dsh-client-ui-conversation"
       ]
     }
+  },
+  "homepage": "https://github.com/Tunny1985/dsh-plugin-page-zh#readme",
+  "bugs": {
+    "url": "https://github.com/Tunny1985/dsh-plugin-page-zh/issues"
   }
 }
