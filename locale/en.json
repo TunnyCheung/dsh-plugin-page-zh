@@ -1,6 +1,6 @@
 {
   "meta": {
     "title": "Plugins Page Chinese (DSH)",
-    "description": "Show every plugin's name and description on the Settings → Plugins page in Chinese, so anyone can tell what each plugin does at a glance. Fully offline, free, edits no plugin package, and never affects plugin upgrades."
+    "description": "Show every plugin's name and description on the Settings → Plugins page in Chinese, so anyone can tell what each plugin does at a glance. Fully offline, free, edits no plugin package, and never affects plugin upgrades. Open source: https://github.com/Tunny1985/dsh-plugin-page-zh"
   }
 }

@@ -3,56 +3,77 @@
 > **一句话**：把 the agent harness（DSH）**设置 → 插件** 页里每个插件的**名称和简介**显示成中文，人人一眼看懂每个插件是干什么的。
 > 完全离线、零网络、零付费；**不改任何插件包、不影响插件升级**；只在本地渲染时替换显示文本，重启即恢复原样。
 
+**仓库**：<https://github.com/Tunny1985/dsh-plugin-page-zh>　·　**发布版**：[v2.0.0](https://github.com/Tunny1985/dsh-plugin-page-zh/releases/tag/v2.0.0)　·　**许可**：MIT
+
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![tests](https://img.shields.io/badge/tests-14%20passed-brightgreen.svg)](test/e2e.cjs)
+[![CI](https://github.com/Tunny1985/dsh-plugin-page-zh/actions/workflows/ci.yml/badge.svg)](https://github.com/Tunny1985/dsh-plugin-page-zh/actions/workflows/ci.yml)
 
 ---
 
-## 它解决什么问题
+## 这是什么
 
-DSH 的插件页会列出你装的每个插件，但很多第三方插件的**名称和简介是英文**，看不懂、不知道是干嘛的。
-这个插件在**本地**把它们的名称/简介翻成中文，让你一眼看清每个插件的作用。
+DSH（the agent harness）的「设置 → 插件」页会列出你装的每个插件，但很多第三方插件的**名称和简介是英文**，看不懂、不知道是干嘛的。
+**dsh-plugin-page-zh** 在**你本机**把这些名称和简介显示成中文，让你一眼看清每个插件的作用——不懂英文也能管理好插件。
 
-- ✅ **完全离线**：内置本地词典，不联网、不调用任何翻译 API、不花钱。
-- ✅ **不改插件包**：只在渲染出口运行时替换显示文本，别人插件的文件一字未动。
-- ✅ **不影响升级**：插件照常升级；翻译只发生在你本机内存里。
-- ✅ **可逆无残留**：卸载/停用本插件，立刻恢复英文原文；重启即失效，绝不写回任何文件。
-- ✅ **官方中文优先**：插件若自带`locale/zh.json`中文，直接用它；没有才用本地词典。
+- 🎯 **只做一件事**：让 DSH 插件页的名称/简介说中文。
+- 🔒 **完全离线**：内置本地词典，不联网、不调用任何翻译 API、不花一分钱。
+- 🧩 **不改插件包**：只在渲染出口运行时替换显示文本，别人插件的文件一字未动。
+- ⬆️ **不影响升级**：插件照常升级；翻译只发生在你本机内存里。
+- ↩️ **可逆无残留**：停用/卸载本插件立刻恢复英文原文；重启即失效，绝不写回任何文件。
+- 🥇 **官方中文优先**：插件若自带 `locale/zh.json` 中文，直接用它；没有才用本地词典。
+
+---
+
+## 特性一览
+
+| 特性 | 说明 |
+|---|---|
+| 离线词典 | 46 条内置译文，覆盖常见插件；可自行扩充 |
+| 三级优先级 | 官方 `locale/zh.json` 中文 → 本地词典（按包名）→ 本地词典（按原文/别名）→ 英文原文 |
+| 多语言对象兼容 | 插件自带 `{en, zh, …}` 时按当前语言取值，官方无中文则本地词典覆盖 |
+| 安全兜底 | 全程 `try/catch`；词典键防原型污染；任何异常都退回原始逻辑 |
+| 可逆 | 通过 `ctx.effect` cleanup 还原原始方法，停用即恢复 |
+| 测试 + CI | 14 条离线端到端测试；GitHub Actions 多 Node 版本 + 词典一致性校验 |
 
 ---
 
 ## 安装（小白 3 步）
 
-> 前提：你已经装好并能在本机运行 DeepSeek Harness（DSH）桌面版。
+> 前提：已装好并能在本机运行 the agent harness（DSH）桌面版。
 
-### 方式 A：从本地目录安装（推荐，最简单）
+### 方式 A：从本地目录安装（推荐）
 
-1. 把这个仓库放到一个固定目录（例如 `D:\plugins\dsh-plugin-page-zh`）。
-2. 在 DSH 里打开一个能执行命令的会话，让 Agent 帮你安装（或你自己用 DSH 的插件安装能力）：
+1. 克隆或下载本仓库到固定目录：
+   ```bash
+   git clone https://github.com/Tunny1985/dsh-plugin-page-zh.git
+   ```
+   （或直接下载 ZIP 解压到例如 `D:\plugins\dsh-plugin-page-zh`）
+2. 在 DSH 里安装本地插件（Agent 工具 `plugin_manager install_bundle`）：
    ```
    插件管理 → 安装本地 bundle → 选择这个目录
    ```
-   命令等价于（DSH Agent 工具）：`plugin_manager install_bundle target=<该目录绝对路径>`。
+   等价命令：`plugin_manager install_bundle target=<该目录绝对路径>`
 3. 安装成功后，**刷新前端**让它生效（见下）。
 
 ### 方式 B：让 DSH 的 AI 助手帮你装
 
-把这句话丢给你的 DSH 会话即可：
+把这句话丢给你的 DSH 会话：
 
-> 帮我安装本地插件：`D:\plugins\dsh-plugin-page-zh`，装好后告诉我怎么刷新。
+> 帮我安装本地插件：`D:\plugins\dsh-plugin-page-zh`（仓库 https://github.com/Tunny1985/dsh-plugin-page-zh），装好后告诉我怎么刷新。
 
 ---
 
 ## 让它生效（关键一步）
 
-插件是**前端（渲染进程）插件**，在**前端窗口加载时**才载入。如果你是在 DSH 已经开着时才装的，需要重载一次前端（不会丢掉当前对话）：
+本插件是**前端（渲染进程）插件**，只在**前端窗口加载时**载入。若在 DSH 已开着时安装，需要重载一次前端（**不会丢掉当前对话**）：
 
-- **仅刷新前端（推荐）**：按 **F12**（或菜单「开发者工具」）打开控制台，执行 `location.reload()`；或直接按 **Ctrl + R**。
+- **仅刷新前端（推荐）**：按 **F12**（或菜单「开发者工具」）打开控制台执行 `location.reload()`；或直接 **Ctrl + R**。
 - **或**：菜单「重启应用」。
 
-刷新后打开 **设置 → 插件**，插件的名称/简介就是中文了。
+刷新后打开 **设置 → 插件**，名称/简介即为中文。
 
-> 想确认生效：F12 控制台里会看到 `[i18n-local] resolveText patched OK; ...` 的日志。
+> 确认生效：F12 控制台会看到 `[i18n-local] resolveText patched OK; ...`。
 
 ---
 
@@ -64,14 +85,14 @@ DSH 插件页渲染每张卡片的标题/简介时，都会调用前端的 `ctx.
 | 优先级 | 来源 | 说明 |
 |---|---|---|
 | 1 | **官方中文** | 插件自带 `locale/zh.json` 且确有中文 → 直接用 |
-| 2 | **本地词典·按包名** | `dictionary.json` 的 `byName` |
-| 3 | **本地词典·按原文** | `dictionary.json` 的 `bySource` / `aliases` |
+| 2 | **本地词典·按包名** | `dictionary.json` 的 `byName`（含可选 `aliases` 英文标题） |
+| 3 | **本地词典·按原文** | `dictionary.json` 的 `bySource` |
 | 4 | **英文原文** | 都没有则原样显示 |
 
 - 纯字符串（大多数第三方插件）→ 查词典。
-- 语言对象 `{en, zh, …}`（自带多语言）→ 官方有中文用官方，否则用本地词典覆盖。
-- 全程 `try/catch` 兜底，任何异常都退回原始逻辑，**绝不破坏正常渲染**。
-- 卸载时通过 `ctx.effect` 的 cleanup 还原原始方法，保证可逆。
+- 语言对象 `{en, zh, …}` → 官方有中文用官方，否则用本地词典覆盖。
+- 全程 `try/catch` 兜底，异常退回原始逻辑，**绝不破坏正常渲染**。
+- 停用时 `ctx.effect` cleanup 还原，保证可逆。
 
 ---
 
@@ -79,16 +100,18 @@ DSH 插件页渲染每张卡片的标题/简介时，都会调用前端的 `ctx.
 
 ```
 dsh-plugin-page-zh/
-├─ package.json          # 插件清单（dsh.bundle.patch + dsh.client）
+├─ package.json          # 插件清单（dsh.bundle.patch + dsh.client，含仓库/主页/issue 地址）
 ├─ cordis.patch.yml      # 把本 bundle 注册进 DSH loader
 ├─ index.js              # Host 半：空实现（翻译全在前端）
-├─ client.js             # Client 半：拦截 resolveText + 词典（核心逻辑，DICT 段自动生成）
+├─ client.js             # Client 半：拦截 resolveText + 词典（DICT 段由 build.cjs 自动生成）
 ├─ dictionary.json       # ★ 词典数据源（翻译都在这里，改这里！）
 ├─ build.cjs             # 构建脚本：把 dictionary.json 注入 client.js
 ├─ locale/{en,zh}.json   # 本插件自己在插件页显示的名称/简介
 ├─ icon.svg              # 图标
 ├─ test/e2e.cjs          # 离线端到端测试
+├─ .github/workflows/ci.yml  # GitHub Actions CI
 ├─ CONTRIBUTING.md       # 如何贡献翻译
+├─ CHANGELOG.md          # 更新日志
 └─ README.md
 ```
 
@@ -103,26 +126,35 @@ node build.cjs      # 注入到 client.js
 node test/e2e.cjs   # 跑测试
 ```
 
-详见 [CONTRIBUTING.md](CONTRIBUTING.md)。
+详见 [CONTRIBUTING.md](CONTRIBUTING.md)。欢迎 PR 把新插件的中文补进上游，帮到更多人。
 
 ---
 
 ## 常见问题
 
 **Q：装了没反应？**
-A：前端插件需要重载前端窗口才加载。按 F12 后 `location.reload()` 或 Ctrl+R。
+A：前端插件需重载前端窗口才加载。按 F12 后 `location.reload()` 或 Ctrl+R。
 
 **Q：会不会改坏我别的插件？**
 A：不会。它只拦截一个渲染函数并在返回时翻译文本，从不写任何文件、不改任何插件包。
 
 **Q：升级 DSH 或插件后会不会失效？**
-A：本插件不影响任何插件升级。若 DSH 大版本改了渲染出口，本插件可能需小更新。
+A：不影响任何插件升级。若 DSH 大版本改了渲染出口，本插件可能需小更新。
 
 **Q：能加我自己的翻译吗？**
-A：可以，直接改 `dictionary.json` 再 `node build.cjs`。也欢迎 PR 回馈社区。
+A：可以，直接改 `dictionary.json` 再 `node build.cjs`；也欢迎 PR 回馈社区。
+
+**Q：支持 Windows / macOS / Linux？**
+A：插件纯前端 JS，与平台无关，跟随你的 DSH 桌面端运行。
 
 ---
 
+## 相关链接
+
+- 仓库：<https://github.com/Tunny1985/dsh-plugin-page-zh>
+- 发布版：<https://github.com/Tunny1985/dsh-plugin-page-zh/releases>
+- 问题反馈：<https://github.com/Tunny1985/dsh-plugin-page-zh/issues>
+
 ## 许可证
 
-[MIT](LICENSE)
+[MIT](LICENSE) © 2026 Tunny1985
