@@ -1,5 +1,18 @@
 # 更新日志
 
+## 3.1.0
+
+### 兼容性强化（DSH 升级后仍可用）
+- **不锁 DSH 版本**：package.json 只声明宽松的 `engines.node: ">=18"`，**不声明 `engines.dsh`、也不写任何 `@deepseek-ai/dsh*` 的 peerDependencies**。按宿主的兼容评估规则，这样 `unmetRequirements` 恒为空，**任何 DSH 版本都不会把本插件判为「不兼容」而禁用**（对比：某些插件把 peer 锁在 `^0.2.x`，DSH 升到 0.3+ 就会失效）。
+- **运行时自愈**：`apply` 整体包 `try/catch`，宿主内部 API 变动时插件静默失效但**绝不拖垮插件页**。
+- **locale 服务多路探测**：兼容宿主把 locale 服务改名（如 `i18n`/`intl`）或移到 `ctx.services.locale` / `ctx.get('locale')`。
+- **幂等保护**：重复 apply（热更新/重载）不会叠加拦截。
+- **inject 精简**：移除用不到的 `slots`，只声明 `locale`，减少对宿主契约的依赖。
+- **语法保守**：生产代码不使用可选链 `?.`、空值合并 `??`，最大兼容旧渲染器与 Node。
+
+### 测试
+- 端到端测试增至 **24 条**，新增 8 条兼容性/健壮性专项：幂等、缺 locale、null ctx、locale 改名、resolveText 缺失、effect 缺失、内部异常吞掉等。
+
 ## 3.0.0
 
 ### 新增

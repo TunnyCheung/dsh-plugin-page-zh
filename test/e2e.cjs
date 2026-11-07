@@ -58,6 +58,19 @@ plugin.apply(ctx);
 
 const R = (t) => ctx.locale.resolveText(t);
 
+// 独立的 locale 工厂（复刻官方 resolveText 语义），供兼容性专项用例使用单独实例
+function mkLocale() {
+  return {
+    snapshot: { active: 'zh' },
+    fallbackChain() { return ['zh', 'en']; },
+    resolveText(text) {
+      if (typeof text === 'string') return text;
+      if (text == null) return text;
+      return this.fallbackChain().reduceRight((r, l) => text[localeKey(l)] != null ? text[localeKey(l)] : r, text.en);
+    }
+  };
+}
+
 // ---- 2. 断言框架 ----
 let pass = 0, fail = 0;
 const fails = [];
@@ -95,6 +108,59 @@ t('数字原样', R(123), 123);
 // ---- 4. 可逆性 ----
 effects.forEach((f) => f && f());
 t('cleanup 后还原', fakeLocale.resolveText('dsh-purge'), 'dsh-purge');
+
+// ---- 4b. 兼容性 / 健壮性专项 ----
+// 4b-1 幂等：对同一个 ctx 再次 apply，不应叠加拦截、不应报错
+{
+  const loc = mkLocale();
+  const c2 = { locale: loc, effect(fn) { fn(); } };
+  plugin.apply(c2);
+  const once = loc.resolveText('dsh-purge');
+  plugin.apply(c2); // 二次
+  t('幂等：二次 apply 结果一致', loc.resolveText('dsh-purge'), once);
+}
+// 4b-2 缺 locale 服务：apply 静默跳过、不抛错
+{
+  let threw = false;
+  try { plugin.apply({ effect() {} }); } catch (e) { threw = true; }
+  t('缺 locale 不抛错', threw, false);
+}
+// 4b-3 非法 ctx（null）：apply 静默、不抛错
+{
+  let threw = false;
+  try { plugin.apply(null); } catch (e) { threw = true; }
+  t('null ctx 不抛错', threw, false);
+}
+// 4b-4 宿主改名为 i18n：仍能探测到并生效
+{
+  const loc = mkLocale();
+  const ctx2 = { i18n: loc, effect(fn) { fn(); } };
+  plugin.apply(ctx2);
+  t('locale 改名 i18n 仍生效', loc.resolveText('dsh-purge'), 'dsh-purge · 提示词权威性清洗');
+}
+// 4b-5 locale 存在但 resolveText 非函数：不抛错、原样
+{
+  let threw = false;
+  try { plugin.apply({ locale: {}, effect() {} }); } catch (e) { threw = true; }
+  t('resolveText 缺失不抛错', threw, false);
+}
+// 4b-6 effect 缺失：仍拦截，并靠 pagehide 兜底还原（不抛错）
+{
+  const loc = mkLocale();
+  let threw = false;
+  try { plugin.apply({ locale: loc }); } catch (e) { threw = true; }
+  t('effect 缺失不抛错', threw, false);
+  t('effect 缺失仍生效', loc.resolveText('dsh-purge'), 'dsh-purge · 提示词权威性清洗');
+}
+// 4b-7 resolveText 抛错的极端宿主：wrapper 必须吞掉异常并回退原文
+{
+  const loc = mkLocale();
+  const ctx3 = { locale: loc, effect(fn) { fn(); } };
+  plugin.apply(ctx3);
+  // 构造一个内部原始实现会抛的输入
+  const r = loc.resolveText({ get en() { throw new Error('boom'); } });
+  t('内部异常被吞掉不崩', typeof r, 'object');
+}
 // ---- 5. 结果 ----
 console.log(`\n${pass} passed, ${fail} failed`);
 if (fail) {

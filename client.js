@@ -174,16 +174,57 @@ window.__ModuleLoader__.load({
     })();
 
     // ---------- 3. 主逻辑 ----------
-    return {
-      inject: ['slots', 'locale'],
-      apply(ctx) {
-        const locale = ctx && ctx.locale;
-        if (!locale || typeof locale.resolveText !== 'function') {
-          log('locale service unavailable; skip');
-          return;
-        }
+    // 插件自身版本（与 package.json 同步，便于宿主日志排查；不含任何功能副作用）
+    const PLUGIN_VERSION = '3.1.0';
 
-        const original = locale.resolveText;
+    // 在 ctx 上按多种可能的名字寻找 locale 服务，兼容宿主日后改名/搬迁。
+    // 找到即返回；找不到返回 undefined（不抛错）。
+    function pickLocale(ctx) {
+      if (!ctx) return undefined;
+      const cands = ['locale', 'i18n', 'intl'];
+      for (const k of cands) {
+        const v = ctx[k];
+        if (v && typeof v.resolveText === 'function') return v;
+      }
+      // 某些宿主把服务挂在 ctx.services / ctx.get('locale')
+      try {
+        const viaGet = typeof ctx.get === 'function' ? ctx.get('locale') : undefined;
+        if (viaGet && typeof viaGet.resolveText === 'function') return viaGet;
+      } catch (e) {}
+      try {
+        const s = ctx.services;
+        if (s && s.locale && typeof s.locale.resolveText === 'function') return s.locale;
+      } catch (e) {}
+      return undefined;
+    }
+
+    return {
+      // 只声明 locale（slots 用不到，减少对宿主 slots 契约的依赖）。
+      // 注：host 侧若对 inject 声明存在/缺失更严格，locale 也做了 findLocale 兜底，不会硬崩。
+      inject: ['locale'],
+      apply(ctx) {
+        try {
+          applyInner(ctx);
+        } catch (e) {
+          // 宿主 API 变化等任何异常：静默跳过，绝不拖垮插件页渲染
+          log('apply failed safely; plugin inert:', String(e && e.message || e));
+        }
+      }
+    };
+
+    function applyInner(ctx) {
+      const locale = pickLocale(ctx);
+      if (!locale || typeof locale.resolveText !== 'function') {
+        log('locale service unavailable; skip');
+        return;
+      }
+
+      const original = locale.resolveText;
+      // 幂等：同一 locale 对象只拦截一次，重复 apply（热更新等）不叠加
+      if (original && original.__i18nLocalPatched) {
+        log('already patched; skip');
+        return;
+      }
 
         // 判断字符串是否“像一个英文包名/标题”（只含 ASCII 可见字符、无中文）
         // 用于决定是否把原英文名保留在中文前面并列显示。
@@ -249,6 +290,8 @@ window.__ModuleLoader__.load({
           }
         };
         try { Object.defineProperty(patched, 'name', { value: 'resolveText' }); } catch (e) {}
+        // 幂等标记，供重复 apply 检测
+        try { patched.__i18nLocalPatched = true; } catch (e) {}
 
         locale.resolveText = patched;
 
@@ -266,10 +309,9 @@ window.__ModuleLoader__.load({
         try {
           const probe = ['@deepseek-ai/dsh-base', 'dsh-purge', 'dsh-better-sidebar']
             .map((k) => `${k} => ${locale.resolveText(k)}`);
-          log('resolveText patched OK;', probe.join(' | '));
+          log('v' + PLUGIN_VERSION + ' resolveText patched OK;', probe.join(' | '));
           log('dict names:', Object.keys(DICT.byName).length, '| sources:', Object.keys(DICT.bySource).length);
         } catch (e) {}
-      }
-    };
+    }
   }
 });
